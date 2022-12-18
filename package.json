@@ -13,11 +13,14 @@
   "author": "Matthew Zygowicz",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.1273.0",
+    "aws-sdk": "^2.1275.0",
+    "body-parser": "^1.20.1",
     "chatgpt": "^2.3.0",
+    "delay": "^5.0.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "puppeteer": "^19.4.0"
+    "puppeteer": "^19.4.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.19.3",
