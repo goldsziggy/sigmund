@@ -1,7 +1,9 @@
+// this file hardcodes response side-stepping chat-gpt
 import { ChatGPTAPI, getOpenAIAuth } from 'chatgpt'
 import puppeteer from 'puppeteer-extra'
 import { v4 as uuidv4 } from 'uuid'
 import delay from 'delay'
+import fs from 'fs'
 import AWS from 'aws-sdk'
 
 const Polly = new AWS.Polly({
@@ -13,7 +15,8 @@ function getVoice(message) {
   let params = {
     Text: message,
     OutputFormat: 'mp3',
-    VoiceId: 'Kimberly',
+    VoiceId: 'Arthur',
+    Engine: 'neural',
   }
   return new Promise((resolve, reject) => {
     Polly.synthesizeSpeech(params, (err, data) => {
@@ -29,7 +32,7 @@ function getVoice(message) {
 }
 
 // async function GetChat(req, res, next) {
-export default async function GetChat(req, res, next) {
+export default async function postChatDebug(req, res, next) {
   try {
     const { msg, conversationId, parentMessageId } = req.body
     console.log('Request Recieved')
@@ -65,18 +68,22 @@ export default async function GetChat(req, res, next) {
 
     // })
 
-    const api = new ChatGPTAPI({
-      // ...openAIAuth,
-      debug: true,
-      userAgent,
-      clearanceToken: process.env.CF_CLEARANCE,
-      sessionToken: process.env.SESSION_TOKEN,
-    })
-    await api.ensureAuth()
-    const conversation = api.getConversation({ parentMessageId, conversationId })
-    await delay(1000)
+    // const api = new ChatGPTAPI({
+    //   // ...openAIAuth,
+    //   debug: true,
+    //   userAgent,
+    //   clearanceToken: process.env.CF_CLEARANCE,
+    //   sessionToken: process.env.SESSION_TOKEN,
+
+    //   // cookies,
+    // })
+    // await api.ensureAuth()
+    // const conversation = api.getConversation({ parentMessageId, conversationId })
+    // await delay(1000)
     // send a message and wait for the response
-    const response = await conversation.sendMessage(message, { conversationId, parentMessageId })
+    // const response = await conversation.sendMessage(message, { conversationId, parentMessageId })
+    const conversation = { conversationId: 'abc123', parentMessageId: 'xyz321' }
+    const response = "Good morning, it's my pleasure to meet you. How can I help you today?"
     // response is a markdown-formatted string
     console.log(response)
 

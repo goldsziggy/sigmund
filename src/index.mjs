@@ -4,11 +4,9 @@ dotenv.config()
 
 import express from 'express'
 import bodyParser from 'body-parser'
-import getChat from './routes/get-chat.mjs'
-import getChatDebug from './routes/get-chat-debug.mjs'
-
-// const express = require("express")
-// const getChat = require("./routes/get-chat")
+import postChat from './routes/post-chat.mjs'
+import postChatDebug from './routes/post-chat-debug.mjs'
+import postMock from './routes/post-mock.mjs'
 
 const app = express()
 const PORT = 8080
@@ -18,8 +16,9 @@ app.use(express.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 const api = express.Router()
-api.post('/chat', getChat)
-api.post('/chat-debug', getChatDebug)
+api.post('/chat', postChat)
+api.post('/chat-debug', postChatDebug)
+api.post('/mock', postMock)
 
 app.use('/api', api)
 
