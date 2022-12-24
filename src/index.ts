@@ -4,9 +4,14 @@ dotenv.config()
 
 import express from 'express'
 import bodyParser from 'body-parser'
-import postChat from './routes/post-chat.mjs'
-import postChatDebug from './routes/post-chat-debug.mjs'
-import postMock from './routes/post-mock.mjs'
+import postChat from './routes/post-chat.js'
+import postChatPolly from './routes/post-chat-polly.js'
+import postMock from './routes/post-mock.js'
+import postChatGUI from './routes/post-chat-gui.js'
+import postChatSession from './routes/post-chat-session.js'
+import { initializeAccounts } from './utils/chatgpt.js'
+
+initializeAccounts()
 
 const app = express()
 const PORT = 8080
@@ -17,8 +22,10 @@ app.use(bodyParser.json())
 
 const api = express.Router()
 api.post('/chat', postChat)
-api.post('/chat-debug', postChatDebug)
+api.post('/chat-polly', postChatPolly)
+api.post('/chat-session', postChatSession)
 api.post('/mock', postMock)
+api.post('/chat-gui', postChatGUI)
 
 app.use('/api', api)
 
