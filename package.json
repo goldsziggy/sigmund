@@ -16,7 +16,7 @@
   "dependencies": {
     "aws-sdk": "^2.1275.0",
     "body-parser": "^1.20.1",
-    "chatgpt": "^3.3.2",
+    "chatgpt": "^5.0.7",
     "delay": "^5.0.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",

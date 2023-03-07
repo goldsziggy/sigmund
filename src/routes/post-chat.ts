@@ -1,20 +1,20 @@
-import { ChatGPTAPI, getOpenAIAuth } from 'chatgpt'
-import puppeteer from 'puppeteer-extra'
-import AWS from 'aws-sdk'
-import getErrorMessage from '../utils/error-message.js'
+import { ChatGPTAPI, getOpenAIAuth } from "chatgpt"
+// import puppeteer from "puppeteer-extra"
+import AWS from "aws-sdk"
+import getErrorMessage from "../utils/error-message.js"
 
 const Polly = new AWS.Polly({
-  signatureVersion: 'v4',
+  signatureVersion: "v4",
   region: process.env.AWS_DEFAULT_REGION,
 })
 
 function getVoice(message) {
   const params = {
     Text: message,
-    OutputFormat: 'mp3',
-    VoiceId: 'Arthur',
-    Engine: 'neural',
-    SampleRate: '24000',
+    OutputFormat: "mp3",
+    VoiceId: "Arthur",
+    Engine: "neural",
+    SampleRate: "24000",
   }
   return new Promise((resolve, reject) => {
     Polly.synthesizeSpeech(params, (err, data) => {
@@ -33,7 +33,7 @@ function getVoice(message) {
 export default async function postChat(req, res, next) {
   try {
     const { msg, conversationId, parentMessageId } = req.body
-    console.log('Request Recieved')
+    console.log("Request Recieved")
     // let conversationId = conversation_id || undefined
     // let parentMessageId = parent_message_id || undefined
     const message =
@@ -43,38 +43,35 @@ export default async function postChat(req, res, next) {
       Human: Good morning doctor, thank you for seeing me.
       Doctor:`
 
-    const userAgent =
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:107.0) Gecko/20100101 Firefox/107.0'
+    // const userAgent =
+    //   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:107.0) Gecko/20100101 Firefox/107.0'
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--exclude-switches', 'enable-automation'],
-      ignoreHTTPSErrors: true,
-      executablePath: '/usr/bin/google-chrome',
-    })
-    const page = (await browser.pages())[0]
-    await page.setUserAgent(userAgent)
+    // const browser = await puppeteer.launch({
+    //   headless: true,
+    //   args: ['--no-sandbox', '--exclude-switches', 'enable-automation'],
+    //   ignoreHTTPSErrors: true,
+    //   executablePath: '/usr/bin/google-chrome',
+    // })
+    // const page = (await browser.pages())[0]
+    // await page.setUserAgent(userAgent)
 
-    const openAIAuth = await getOpenAIAuth({
-      email: process.env.CHATGPT_EMAIL,
-      password: process.env.CHATGPT_PASSWORD,
-      browser,
-      // page,
-      // customAgent: userAgent,
-    })
+    // const openAIAuth = await getOpenAIAuth({
+    //   email: process.env.CHATGPT_EMAIL,
+    //   password: process.env.CHATGPT_PASSWORD,
+    //   browser,
+    //   // page,
+    //   // customAgent: userAgent,
+    // })
 
     const api = new ChatGPTAPI({
-      ...openAIAuth,
+      apiKey: process.env.OPENAI_API_KEY,
       debug: true,
-      userAgent,
-      // clearanceToken: process.env.CF_CLEARANCE,
-      // sessionToken: process.env.SESSION_TOKEN,
     })
-    await api.initSession()
 
     // send a message and wait for the response
     const conversation = await api.sendMessage(message, { conversationId, parentMessageId })
-    const { response } = conversation
+    console.log(conversation)
+    const { text: response } = conversation
     // response is a markdown-formatted string
     console.log(response)
 
@@ -84,7 +81,7 @@ export default async function postChat(req, res, next) {
       response,
       conversationId: conversation.conversationId,
       parentMessageId: conversation.messageId,
-      audio: (audio as Buffer).toString('base64'),
+      audio: (audio as Buffer).toString("base64"),
     })
   } catch (e) {
     console.error(e)
