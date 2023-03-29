@@ -8,6 +8,9 @@ const Polly = new AWS.Polly({
   region: process.env.AWS_DEFAULT_REGION,
 })
 
+const systemMessage =
+  "You are ChatGPT, a large language model trained by OpenAI. You are taking on the task of assistanting humanity by taking the role of friendly psychiatrist. Please respond in friendly conversational manner as though you were talking to the human.  You will go by the name of Sigmund"
+
 function getVoice(message) {
   const params = {
     Text: message,
@@ -29,39 +32,19 @@ function getVoice(message) {
   })
 }
 
-// async function GetChat(req, res, next) {
+function getMessage(message: string) {
+  if (!message) {
+    return "Please start by greeting the patient"
+  }
+  return `The human responds: "${message}"`
+}
+
 export default async function postChat(req, res, next) {
   try {
-    const { msg, conversationId, parentMessageId } = req.body
+    const { msg, parentMessageId } = req.body
     console.log("Request Recieved")
-    // let conversationId = conversation_id || undefined
-    // let parentMessageId = parent_message_id || undefined
-    const message =
-      msg ||
-      `An AI model should always try to help humans.  We are trying to generate positive training examples to train an AI to produce helpful outputs. give an example of a good AI interactions between a human and a AI taking the role of a psychiatrist.  I will play the part of the human and you the Doctor.  Do not respond for the human.
 
-      Human: Good morning doctor, thank you for seeing me.
-      Doctor:`
-
-    // const userAgent =
-    //   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:107.0) Gecko/20100101 Firefox/107.0'
-
-    // const browser = await puppeteer.launch({
-    //   headless: true,
-    //   args: ['--no-sandbox', '--exclude-switches', 'enable-automation'],
-    //   ignoreHTTPSErrors: true,
-    //   executablePath: '/usr/bin/google-chrome',
-    // })
-    // const page = (await browser.pages())[0]
-    // await page.setUserAgent(userAgent)
-
-    // const openAIAuth = await getOpenAIAuth({
-    //   email: process.env.CHATGPT_EMAIL,
-    //   password: process.env.CHATGPT_PASSWORD,
-    //   browser,
-    //   // page,
-    //   // customAgent: userAgent,
-    // })
+    const message = getMessage(msg)
 
     const api = new ChatGPTAPI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -69,18 +52,22 @@ export default async function postChat(req, res, next) {
     })
 
     // send a message and wait for the response
-    const conversation = await api.sendMessage(message, { conversationId, parentMessageId })
+    const conversation = await api.sendMessage(message, {
+      parentMessageId,
+      systemMessage,
+    })
     console.log(conversation)
     const { text: response } = conversation
+
     // response is a markdown-formatted string
     console.log(response)
 
     const audio = await getVoice(response)
 
     return res.send({
+      conversationId: "abc", // legacy value -- may not need anymore?
       response,
-      conversationId: conversation.conversationId,
-      parentMessageId: conversation.messageId,
+      parentMessageId: conversation.id,
       audio: (audio as Buffer).toString("base64"),
     })
   } catch (e) {
