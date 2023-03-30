@@ -31,15 +31,6 @@ export const initializeAccounts = async () => {
       ({ email, password, isGoogleLogin, sessionToken, clearanceToken }: GPTBrowserUser) => {
         return new Promise((resolve, reject) => {
           console.log("Intializing account", email, isGoogleLogin)
-          const api = new ChatGPTAPI({
-            sessionToken,
-            clearanceToken,
-            userAgent,
-          })
-
-          api.initSession().then(() => {
-            resolve({ api })
-          })
         })
       }
     )
