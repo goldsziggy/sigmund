@@ -1,5 +1,4 @@
 import { ChatGPTAPI } from "chatgpt"
-// import puppeteer from "puppeteer-extra"
 import AWS from "aws-sdk"
 import getErrorMessage from "../utils/error-message.js"
 
