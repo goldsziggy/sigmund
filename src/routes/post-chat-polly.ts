@@ -1,32 +1,61 @@
 // this file hardcodes response side-stepping chat-gpt
-import fs from 'fs'
-import AWS from 'aws-sdk'
-import getErrorMessage from '../utils/error-message.js'
+import fs from "fs"
+import Stream, { Readable } from "stream"
+// import AWS from 'aws-sdk'
+import { PollyClient, SynthesizeSpeechCommand } from "@aws-sdk/client-polly"
+import getErrorMessage from "../utils/error-message.js"
 
-const Polly = new AWS.Polly({
-  signatureVersion: 'v4',
-  region: process.env.AWS_DEFAULT_REGION,
+// const Polly = new AWS.Polly({
+//   signatureVersion: 'v4',
+//   region: process.env.AWS_DEFAULT_REGION,
+// })
+
+const Polly = new PollyClient({
+  region: process.env.AWS_DEFAULT_REGION || "us-east-1",
 })
 
-console.log('process.env.AWS_DEFAULT_REGION', process.env.AWS_DEFAULT_REGION)
+async function stream2buffer(stream: Stream): Promise<Buffer> {
+  return new Promise<Buffer>((resolve, reject) => {
+    const _buf = Array<any>()
+
+    stream.on("data", (chunk) => _buf.push(chunk))
+    stream.on("end", () => resolve(Buffer.concat(_buf)))
+    stream.on("error", (err) => reject(`error converting stream - ${err}`))
+  })
+}
+
+console.log("process.env.AWS_DEFAULT_REGION", process.env.AWS_DEFAULT_REGION)
 function getVoice(message) {
   const params = {
     Text: message,
-    OutputFormat: 'mp3',
-    VoiceId: 'Arthur',
-    Engine: 'neural',
-    SampleRate: '24000',
+    OutputFormat: "mp3",
+    VoiceId: "Arthur",
+    Engine: "neural",
+    SampleRate: "24000",
   }
   return new Promise((resolve, reject) => {
-    Polly.synthesizeSpeech(params, (err, data) => {
-      if (err) {
+    const command = new SynthesizeSpeechCommand(params)
+
+    Polly.send(command)
+      .then(async (data) => {
+        if (data.AudioStream instanceof Readable) {
+          const buffer = await stream2buffer(data.AudioStream)
+          resolve(buffer)
+        }
+      })
+      .catch((err) => {
         console.error(err)
-        return reject(err.code)
-      }
-      if (data.AudioStream instanceof Buffer) {
-        return resolve(data.AudioStream)
-      }
-    })
+        reject(err.code)
+      })
+    // Polly.synthesizeSpeech(params, (err, data) => {
+    //   if (err) {
+    //     console.error(err)
+    //     return reject(err.code)
+    //   }
+    //   if (data.AudioStream instanceof Buffer) {
+    //     return resolve(data.AudioStream)
+    //   }
+    // })
   })
 }
 
@@ -34,7 +63,7 @@ function getVoice(message) {
 export default async function postChatPolly(req, res, next) {
   try {
     const { msg, conversationId, parentMessageId } = req.body
-    console.log('Request Recieved')
+    console.log("Request Recieved")
     // let conversationId = conversation_id || undefined
     // let parentMessageId = parent_message_id || undefined
     const message =
@@ -45,9 +74,9 @@ export default async function postChatPolly(req, res, next) {
       Doctor:`
 
     const userAgent =
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:107.0) Gecko/20100101 Firefox/107.0'
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:107.0) Gecko/20100101 Firefox/107.0"
 
-    const conversation = { conversationId: 'abc123', parentMessageId: 'xyz321' }
+    const conversation = { conversationId: "abc123", parentMessageId: "xyz321" }
     const response = "Good morning, it's my pleasure to meet you. How can I help you today?"
     // response is a markdown-formatted string
     console.log(response)
@@ -56,14 +85,14 @@ export default async function postChatPolly(req, res, next) {
 
     const arr16 = Int16Array.from(audio as Buffer)
 
-    fs.writeFileSync('audio-mp3.json', JSON.stringify(audio))
-    fs.writeFileSync('audio-mp3.base64', (audio as Buffer).toString('base64'))
+    fs.writeFileSync("audio-mp3.json", JSON.stringify(audio))
+    fs.writeFileSync("audio-mp3.base64", (audio as Buffer).toString("base64"))
 
     return res.send({
       response,
       conversationId: conversation.conversationId,
       parentMessageId: conversation.parentMessageId,
-      audio: (audio as Buffer).toString('base64'),
+      audio: (audio as Buffer).toString("base64"),
     })
   } catch (e) {
     console.error(e)
