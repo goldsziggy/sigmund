@@ -1,2 +1,5 @@
 node_modules
 .env
+dist/mock/sessions.js
+dist/mock/sessions.json
+src/mock/sessions.ts
